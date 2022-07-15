@@ -10,6 +10,7 @@ from ecommerce_integrations.ecommerce_integrations.doctype.ecommerce_item import
 from ecommerce_integrations.unicommerce.api_client import JsonDict, UnicommerceAPIClient
 from ecommerce_integrations.unicommerce.constants import (
 	DEFAULT_WEIGHT_UOM,
+	ITEM_BATCH_GROUP_FIELD,
 	ITEM_HEIGHT_FIELD,
 	ITEM_LENGTH_FIELD,
 	ITEM_SYNC_CHECKBOX,
@@ -37,6 +38,7 @@ UNI_TO_ERPNEXT_ITEM_MAPPING = {
 	"length": ITEM_LENGTH_FIELD,
 	"width": ITEM_WIDTH_FIELD,
 	"height": ITEM_HEIGHT_FIELD,
+	"batchGroupCode": ITEM_BATCH_GROUP_FIELD,
 }
 
 ERPNEXT_TO_UNI_ITEM_MAPPING = {v: k for k, v in UNI_TO_ERPNEXT_ITEM_MAPPING.items()}
@@ -97,6 +99,7 @@ def _create_item_dict(uni_item):
 	item_dict["barcodes"] = _get_barcode_data(uni_item)
 	item_dict["disabled"] = int(not uni_item.get("enabled"))
 	item_dict["item_group"] = _get_item_group(uni_item.get("categoryCode"))
+	item_dict["name"] = item_dict["item_code"]  # when naming is by item series
 
 	return item_dict
 
@@ -242,7 +245,10 @@ def upload_items_to_unicommerce(
 
 	for item_code in item_codes:
 		item_data = _build_unicommerce_item(item_code)
-		_, status = client.create_update_item(item_data)
+		sku = item_data.get("skuCode")
+
+		item_exists = bool(client.get_unicommerce_item(sku, log_error=False))
+		_, status = client.create_update_item(item_data, update=item_exists)
 
 		if status:
 			_handle_ecommerce_item(item_code)
@@ -265,6 +271,9 @@ def _build_unicommerce_item(item_code: ItemCode) -> JsonDict:
 	item_json["enabled"] = not bool(item.get("disabled"))
 
 	for barcode in item.barcodes:
+		if not item_json.get("scanIdentifier"):
+			# Set first barcode as scan identifier
+			item_json["scanIdentifier"] = barcode.barcode
 		if barcode.barcode_type == "EAN":
 			item_json["ean"] = barcode.barcode
 		elif barcode.barcode_type == "UPC-A":
