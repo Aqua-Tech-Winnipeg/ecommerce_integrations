@@ -43,6 +43,7 @@ class UnicommerceAPIClient:
 		body: Optional[JsonDict] = None,
 		params: Optional[JsonDict] = None,
 		files: Optional[JsonDict] = None,
+		log_error=True,
 	) -> Tuple[JsonDict, bool]:
 
 		if headers is None:
@@ -60,7 +61,8 @@ class UnicommerceAPIClient:
 			response.reason = cstr(response.reason) + cstr(response.text)
 			response.raise_for_status()
 		except Exception:
-			create_unicommerce_log(status="Error", make_new=True)
+			if log_error:
+				create_unicommerce_log(status="Error", make_new=True)
 			return None, False
 
 		if method == "GET" and "application/json" not in response.headers.get("content-type"):
@@ -81,25 +83,28 @@ class UnicommerceAPIClient:
 
 		return data, status
 
-	def get_unicommerce_item(self, sku: str) -> Optional[JsonDict]:
+	def get_unicommerce_item(self, sku: str, log_error=True) -> Optional[JsonDict]:
 		"""Get Unicommerce item data for specified SKU code.
 
 		ref: https://documentation.unicommerce.com/docs/itemtype-get.html
 		"""
 		item, status = self.request(
-			endpoint="/services/rest/v1/catalog/itemType/get", body={"skuCode": sku}
+			endpoint="/services/rest/v1/catalog/itemType/get", body={"skuCode": sku}, log_error=log_error
 		)
 		if status:
 			return item
 
-	def create_update_item(self, item_dict: JsonDict) -> Tuple[JsonDict, bool]:
+	def create_update_item(self, item_dict: JsonDict, update=False) -> Tuple[JsonDict, bool]:
 		"""Create/update item on unicommerce.
 
 		ref: https://documentation.unicommerce.com/docs/createoredit-itemtype.html
 		"""
-		return self.request(
-			endpoint="/services/rest/v1/catalog/itemType/createOrEdit", body={"itemType": item_dict}
-		)
+
+		endpoint = "/services/rest/v1/catalog/itemType/createOrEdit"
+		if update:
+			# Edit has separate endpoint even though docs suggest otherwise
+			endpoint = "/services/rest/v1/catalog/itemType/edit"
+		return self.request(endpoint=endpoint, body={"itemType": item_dict})
 
 	def get_sales_order(self, order_code: str) -> Optional[JsonDict]:
 		"""Get details for a sales order.
