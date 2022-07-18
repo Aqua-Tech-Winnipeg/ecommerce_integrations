@@ -20,6 +20,7 @@ EVENT_MAPPER = {
 	"orders/paid": "ecommerce_integrations.shopify.invoice.prepare_sales_invoice",
 	"orders/fulfilled": "ecommerce_integrations.shopify.fulfillment.prepare_delivery_note",
 	"orders/cancelled": "ecommerce_integrations.shopify.order.cancel_order",
+	"refunds/create": "ecommerce_integrations.shopify.refund.prepare_credit_note"
 }
 
 SHOPIFY_VARIANTS_ATTR_LIST = ["option1", "option2", "option3"]
