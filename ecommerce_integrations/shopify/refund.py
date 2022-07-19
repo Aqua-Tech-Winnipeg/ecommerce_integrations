@@ -30,7 +30,7 @@ def prepare_credit_note(payload, request_id=None):
 def make_credit_note(refund, setting, sales_invoice):
 	credit_note = create_credit_note(sales_invoice.name)
 
-	if refund["restock"] = false:
+	if not refund["restock"]:
 		credit_note.update_stock = 0
 
 	return_items = [get_item_code(line.get("line_item")) for line in return.get("return_line_items")]
