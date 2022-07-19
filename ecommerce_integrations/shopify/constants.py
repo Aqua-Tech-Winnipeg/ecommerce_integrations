@@ -13,6 +13,7 @@ WEBHOOK_EVENTS = [
 	"orders/paid",
 	"orders/fulfilled",
 	"orders/cancelled",
+	"refunds/create",
 ]
 
 EVENT_MAPPER = {
