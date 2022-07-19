@@ -12,12 +12,12 @@ from ecommerce_integrations.shopify.product import get_item_code
 
 
 def prepare_credit_note(payload, request_id=None):
-    refund = payload
-    frappe.set_user("Administrator")
-    setting = frappe.get_doc(SETTING_DOCTYPE)
+	refund = payload
+	frappe.set_user("Administrator")
+	setting = frappe.get_doc(SETTING_DOCTYPE)
 	frappe.flags.request_id = request_id
 
-    try:
+	try:
 		sales_invoice = get_sales_invoice(cstr(refund["id"]))
 		if sales_invoice:
 			create_credit_note(refund, setting, sales_invoice)
@@ -28,17 +28,17 @@ def prepare_credit_note(payload, request_id=None):
 		create_shopify_log(status="Error", exception=e, rollback=True)
 
 def make_credit_note(refund, setting, sales_invoice):
-    credit_note = create_credit_note(sales_invoice.name)
+	credit_note = create_credit_note(sales_invoice.name)
 
-    if refund["restock"] = false:
-        credit_note.is_return = 0
+	if refund["restock"] = false:
+		credit_note.is_return = 0
 
-    return_items = [get_item_code(line.get("line_item")) for line in return.get("return_line_items")]
+	return_items = [get_item_code(line.get("line_item")) for line in return.get("return_line_items")]
 
-    _handle_partial_returns(credit_note, return_items)
+	_handle_partial_returns(credit_note, return_items)
 
-    credit_note.insert(ignore_mandatory=True)
-    credit_note.submit()
+	credit_note.insert(ignore_mandatory=True)
+	credit_note.submit()
 
 
 def create_credit_note(invoice_name):
@@ -52,7 +52,7 @@ def create_credit_note(invoice_name):
 		for item, tax_distribution in tax.item_wise_tax_detail.items():
 			tax_distribution[1] *= -1
 		tax.item_wise_tax_detail = json.dumps(tax.item_wise_tax_detail)
-    
+	
 	return credit_note
 
 def get_sales_invoice(order_id):
