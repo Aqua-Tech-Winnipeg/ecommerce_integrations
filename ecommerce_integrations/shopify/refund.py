@@ -1,6 +1,7 @@
 import frappe
 from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_sales_return
 from frappe.utils import cint, cstr, getdate, nowdate
+from typing import List
 
 from ecommerce_integrations.shopify.constants import (
 	ORDER_ID_FIELD,
