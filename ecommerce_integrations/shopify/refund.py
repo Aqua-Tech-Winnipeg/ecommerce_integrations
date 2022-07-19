@@ -19,7 +19,7 @@ def prepare_credit_note(payload, request_id=None):
 	frappe.flags.request_id = request_id
 
 	try:
-		sales_invoice = get_sales_invoice(cstr(refund["id"]))
+		sales_invoice = get_sales_invoice(cstr(refund["order_id"]))
 		if sales_invoice:
 			create_credit_note(refund, setting, sales_invoice)
 			create_shopify_log(status="Success")
