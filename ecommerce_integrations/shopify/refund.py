@@ -21,7 +21,7 @@ def prepare_credit_note(payload, request_id=None):
 	try:
 		sales_invoice = get_sales_invoice(cstr(refund["order_id"]))
 		if sales_invoice:
-			create_credit_note(refund, setting, sales_invoice)
+			make_credit_note(refund, setting, sales_invoice)
 			create_shopify_log(status="Success")
 		else:
 			create_shopify_log(status="Invalid", message="Sales Invoice not found for creating Credit Note.")
