@@ -33,7 +33,7 @@ def make_credit_note(refund, setting, sales_invoice):
 	if not refund["restock"]:
 		credit_note.update_stock = 0
 
-	return_items = [get_item_code(line.get("line_item")) for line in return.get("return_line_items")]
+	return_items = [get_item_code(line.get("line_item")) for line in refund.get("refund_line_items")]
 
 	_handle_partial_returns(credit_note, return_items)
 
