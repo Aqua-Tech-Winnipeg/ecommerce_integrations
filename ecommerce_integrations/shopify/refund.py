@@ -58,9 +58,9 @@ def create_credit_note(invoice_name):
 
 def get_sales_invoice(order_id):
 	"""Get ERPNext sales invoice using shopify order id."""
-	sales_order = frappe.db.get_value("Sales Invoice", filters={ORDER_ID_FIELD: order_id})
-	if sales_order:
-		return frappe.get_doc("Sales Invoice", sales_order)
+	sales_invoice = frappe.db.get_value("Sales Invoice", filters={ORDER_ID_FIELD: order_id})
+	if sales_invoice:
+		return frappe.get_doc("Sales Invoice", sales_invoice)
 
 def _handle_partial_returns(credit_note, returned_items: List[str]) -> None:
 	""" Remove non-returned item from credit note and update taxes """
