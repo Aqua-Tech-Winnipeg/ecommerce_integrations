@@ -29,7 +29,7 @@ def prepare_credit_note(payload, request_id=None):
 		create_shopify_log(status="Error", exception=e, rollback=True)
 
 def make_credit_note(refund, setting, sales_invoice):
-	credit_note = create_credit_note(sales_invoice.name)
+	credit_note = create_credit_note(sales_invoice.name, setting)
 
 	if not refund["restock"]:
 		credit_note.update_stock = 0
@@ -42,7 +42,7 @@ def make_credit_note(refund, setting, sales_invoice):
 	credit_note.submit()
 
 
-def create_credit_note(invoice_name):
+def create_credit_note(invoice_name, setting):
 	credit_note = make_sales_return(invoice_name)
 	
 	for item in credit_note.items:
