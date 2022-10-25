@@ -52,7 +52,7 @@ def make_credit_note(refund, setting, sales_invoice):
 		
 	
 	if len(refund.get("order_adjustments")) > 0:
-		amount = sum(float(adjustment.get("amount")) for adjustment in refund.get("order_adjustments"))
+		amount = sum(float(adjustment.get("amount") + float(adjustment.get("tax_amount"))) for adjustment in refund.get("order_adjustments"))
 		debit_note = create_debit_note(sales_invoice, amount, setting)
 		debit_note.insert(ignore_mandatory=True)
 		debit_note.submit()
