@@ -130,6 +130,10 @@ def _handle_partial_returns(credit_note, returned_items: List[str], sales_invoic
 	for item in credit_note.items:
 		returned_qty_map[item.item_code] += item.qty
 
+	# removing tax lines unconnected to items as setting to 0 wasn't working
+	credit_note.taxes = [
+		tax for tax in credit_note.taxes if len(tax.item_wise_tax_detail) > 0
+	]
 	for tax in credit_note.taxes:
 		# reduce total value
 		item_wise_tax_detail = json.loads(tax.item_wise_tax_detail)
