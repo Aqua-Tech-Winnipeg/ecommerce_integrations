@@ -52,7 +52,7 @@ def make_credit_note(refund, setting, sales_invoice):
 		
 	
 	if len(refund.get("order_adjustments")) > 0:
-		amount = sum(float(adjustment.get("amount") + float(adjustment.get("tax_amount"))) for adjustment in refund.get("order_adjustments"))
+		amount = sum(float(adjustment.get("amount")) + float(adjustment.get("tax_amount")) for adjustment in refund.get("order_adjustments"))
 		debit_note = create_debit_note(sales_invoice, amount, setting)
 		debit_note.insert(ignore_mandatory=True)
 		debit_note.submit()
@@ -62,18 +62,17 @@ def create_debit_note(sales_invoice, amount, setting):
 	debit_note = create_credit_note(sales_invoice.name, setting)
 	debit_note.is_debit_note = 1
 
-	original_amount = debit_note.total + debit_note.total_taxes_and_charges
+	original_amount = sum((item.rate * item.qty) for item in debit_note.items) + debit_note.total_taxes_and_charges
 
 
 	for item in debit_note.items:
-		item_percent = item.amount / original_amount
+		item_percent = (item.rate * item.qty) / original_amount
 		item.rate =  -item_percent * amount
 		item.qty = 0
 
 	for tax in debit_note.taxes:
 		# reduce total value
 		item_wise_tax_detail = json.loads(tax.item_wise_tax_detail)
-		new_tax_amt = 0.0
 
 		for item_code, tax_distribution in item_wise_tax_detail.items():
 			# item_code: [rate, amount]
@@ -81,10 +80,10 @@ def create_debit_note(sales_invoice, amount, setting):
 				# Ignore 0 values
 				continue
 			return_percent = amount / original_amount
+			tax_distribution[0] *= return_percent
 			tax_distribution[1] *= return_percent
-			new_tax_amt += tax_distribution[1]
 
-		tax.tax_amount = new_tax_amt
+		tax.tax_amount *= amount / original_amount
 		tax.item_wise_tax_detail = json.dumps(item_wise_tax_detail)
 	return debit_note
 
@@ -100,6 +99,7 @@ def create_credit_note(invoice_name, setting):
 		tax.item_wise_tax_detail = json.loads(tax.item_wise_tax_detail)
 		for item, tax_distribution in tax.item_wise_tax_detail.items():
 			tax_distribution[1] *= -1
+			tax_distribution[0] *= -1
 		tax.item_wise_tax_detail = json.dumps(tax.item_wise_tax_detail)
 	
 	return credit_note
@@ -130,10 +130,6 @@ def _handle_partial_returns(credit_note, returned_items: List[str], sales_invoic
 	for item in credit_note.items:
 		returned_qty_map[item.item_code] += item.qty
 
-	# removing tax lines unconnected to items as setting to 0 wasn't working
-	credit_note.taxes = [
-		tax for tax in credit_note.taxes if len(tax.item_wise_tax_detail) > 0
-	]
 	for tax in credit_note.taxes:
 		# reduce total value
 		item_wise_tax_detail = json.loads(tax.item_wise_tax_detail)
@@ -141,7 +137,7 @@ def _handle_partial_returns(credit_note, returned_items: List[str], sales_invoic
 
 		for item_code, tax_distribution in item_wise_tax_detail.items():
 			# item_code: [rate, amount]
-			if not tax_distribution[1]:
+			if not tax_distribution[0]:
 				# Ignore 0 values
 				continue
 			return_percent = returned_qty_map.get(item_code, 0.0) / item_code_to_qty_map.get(item_code)
